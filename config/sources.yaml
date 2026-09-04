@@ -1,0 +1,13 @@
+sources:
+  nwp_gfs:
+    provider: noaa_ncep
+    fetch_method: herbie
+  nwp_ecmwf:
+    provider: ecmwf_open_data
+    fetch_method: ecmwf-opendata
+  ensemble_ecmwf_ens:
+    provider: ecmwf_open_data
+    fetch_method: ecmwf-opendata
+  reanalysis_era5:
+    provider: copernicus_cds
+    fetch_method: cdsapi

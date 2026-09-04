@@ -1,0 +1,9 @@
+regions:
+  - id: north_india
+    bbox: [68.0, 24.0, 80.0, 37.0]   # [min_lon, min_lat, max_lon, max_lat]
+  - id: south_india
+    bbox: [74.0, 8.0, 84.0, 18.0]
+  - id: coastal_east
+    bbox: [80.0, 8.0, 92.0, 22.0]
+grid_resolution_deg: 0.25
+lead_times_hours: [6, 12, 24, 48, 72, 120]

@@ -1,0 +1,13 @@
+weighting_model:
+  algorithm: lightgbm
+  retrain_schedule: daily
+  rolling_skill_window_days: 30
+ai_models:
+  lstm:
+    lookback_steps: 24
+  transformer:
+    lookback_steps: 48
+    num_heads: 4
+  gnn:
+    edge_definition: spatial_knn
+    k_neighbors: 8
