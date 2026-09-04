@@ -12,7 +12,7 @@ fastapi
 uvicorn
 streamlit
 mlflow
-apache-airflow
+
 ecmwf-opendata
 herbie-data
 cdsapi

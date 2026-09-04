@@ -18,7 +18,7 @@
 - ⚖️ **Adaptive Weighting Engine**: Utilizes gradient-boosted trees (XGBoost / LightGBM) to dynamically assign spatial-temporal weights based on lead time, terrain, regime, and historical error.
 - 🌪️ **Extreme Event Guidance**: Specialized alert pipeline for heavy precipitation, heatwaves, and high-wind events.
 - 🚀 **REST API & Interactive Dashboard**: Built with FastAPI for high-performance inference and Streamlit for rich spatial-temporal geospatial maps and model reliability analytics.
-- 🐳 **Containerized & Orchestrated**: Out-of-the-box support for Docker, Docker Compose, and Apache Airflow pipelines.
+- 🐳 **Containerized & Monitored**: Out-of-the-box support for Docker, Docker Compose, Streamlit, and Grafana.
 
 ---
 
@@ -98,7 +98,7 @@ sih2026/
 │   ├── models/              # PyTorch weather deep-learning architectures
 │   └── utils/               # Geospatial & temporal helper functions
 ├── tests/                   # Unit and integration test suite
-├── airflow/                 # Apache Airflow DAGs for operational runs
+
 ├── concept.md               # Detailed technical specification
 ├── download_hres.py         # ECMWF open data automated download script
 ├── docker-compose.yml       # Multi-container orchestration (API + Dashboard)

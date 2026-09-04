@@ -84,7 +84,7 @@ Different forecasting systems (physical NWP models, ensemble forecasts, AI/ML we
                               │
                     ┌─────────▼──────────┐
                     │  ORCHESTRATION      │
-                    │  (Docker + Airflow, │
+                    │  (Docker + Grafana, │
                     │  scheduled runs)    │
                     └─────────────────────┘
 ```
@@ -104,7 +104,7 @@ Different forecasting systems (physical NWP models, ensemble forecasts, AI/ML we
 | Geospatial regridding | xESMF or scipy.interpolate | Common-grid preprocessing |
 | Experiment tracking | MLflow (optional but recommended) | Track weighting-model retraining runs |
 | Containerization | Docker, docker-compose | One container per pipeline stage |
-| Orchestration | Apache Airflow | DAG-based scheduled runs (6-hourly/daily) |
+| Monitoring    | Grafana        | Real-time system monitoring |
 | API | FastAPI | REST API for forecast retrieval |
 | Dashboard | Streamlit (fast prototype) / Grafana (ops-grade) | Forecaster-facing UI |
 | Storage | PostgreSQL (metadata/skill scores) + object storage (S3/MinIO) for gridded data | |
@@ -273,7 +273,7 @@ ai-fuse/
 │   └── utils/
 │       ├── logging_config.py
 │       └── schema.py             # pydantic schemas
-├── airflow/
+
 │   └── dags/
 │       └── blending_pipeline_dag.py
 ├── tests/
@@ -400,7 +400,10 @@ Output: a boolean/probability flag layer per grid cell per lead time, plus a sum
 - Extreme event panel: active alerts, highlighted regions.
 - Skill trend view: rolling skill score per source over time.
 
-### 7.10 Orchestration (`airflow/dags/blending_pipeline_dag.py`)
+### 7.10 Monitoring (Grafana)
+Grafana provides system-level metrics for the ASTRA platform, monitoring hardware usage, container health, and API latency.
+
+### 7.11 Orchestration (`airflow/dags/blending_pipeline_dag.py`)
 
 DAG stages (each a task, each a Docker container):
 
@@ -429,7 +432,7 @@ fetch_nwp >> fetch_ensemble >> fetch_ai_models >> preprocess_regrid
 | **Phase 6 — Fusion + Confidence** | Blended forecast output | Implement `fuse_forecasts.py`, `confidence_score.py` | Single blended `xr.Dataset` produced end-to-end from raw data pull to fused output |
 | **Phase 7 — Extreme Flagging** | Alert layer | Implement `flag_extremes.py` with calibrated thresholds | Flags correctly trigger on known historical extreme-event dates (backtest) |
 | **Phase 8 — API + Dashboard** | User-facing layer | Implement FastAPI endpoints; Streamlit dashboard | API returns forecast/weights/extremes for a test region; dashboard renders map + weight map + alerts |
-| **Phase 9 — Orchestration** | Automated operational runs | Write Airflow DAGs; Dockerize each stage; schedule 6-hourly runs | DAG completes end-to-end on a schedule without manual intervention |
+| **Phase 9 — Monitoring** | Automated metric tracking | Configure Grafana; Dockerize each stage | Monitoring completes end-to-end without manual intervention |
 | **Phase 10 — Validation & Demo Prep** | Prove skill improvement | Backtest blended forecast vs. each individual source over a held-out period; compute skill improvement %; prepare demo script/slides | Blended forecast shows measurable RMSE/CRPS improvement over best individual source on held-out data |
 
 ---
