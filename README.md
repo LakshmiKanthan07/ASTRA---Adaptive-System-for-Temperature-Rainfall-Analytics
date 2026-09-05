@@ -1,180 +1,184 @@
-# ASTRA — Adaptive System for Temperature & Rainfall Analytics
-*(Also known as AI-FUSE: Adaptive Intelligent Forecast Unification & Skill Engine)*
+# ASTRA: Adaptive System for Temperature & Rainfall Analytics
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Docker](https://img.shields.io/badge/docker-ready-brightgreen.svg)](Dockerfile)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.25+-red.svg)](https://streamlit.io)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![Framework](https://img.shields.io/badge/Dashboard-Streamlit-FF4B4B.svg)](https://streamlit.io/)
+[![ML Engine](https://img.shields.io/badge/ML%20Engine-XGBoost%20%7C%20LightGBM-orange.svg)](https://xgboost.readthedocs.io/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Hackathon](https://img.shields.io/badge/SIH-2026-brightgreen.svg)]()
 
-**ASTRA** is an enterprise-grade, hybrid **AI–NWP (Numerical Weather Prediction) forecast blending framework** developed for SIH 2026. ASTRA dynamically computes adaptive weights for heterogeneous weather models (such as ECMWF HRES/IFS, GFS, WRF, and Deep-Learning Weather Prediction models like GraphCast/FourCastNet) based on historical skill score, forecast lead time, geographic region, season, and active weather regimes.
+> **A Hybrid AI–NWP Meteorological Blending Framework** dynamically combining physical numerical weather prediction (NWP) models, ensemble spreads, and machine learning models based on lead time, geographic region, seasonal regimes, and historical skill.
+
+---
+
+## 📌 Problem Statement Overview
+
+Weather forecasting systems perform differently depending on region, topography, season, lead time, and prevailing meteorological regimes:
+- Physical NWP models (e.g., **ECMWF HRES**, **NOAA GFS**) excel at synoptic dynamics but can suffer from local convective biases.
+- Ensemble prediction systems provide crucial spread/uncertainty estimates.
+- AI/ML weather models exhibit high computational efficiency and short-lead pattern capture.
+
+**ASTRA** solves this challenge by implementing an intelligent blending system that assigns **adaptive, space- and lead-time-variant weights** to distinct forecast sources. The end product produces an optimized, multi-variable blended forecast for **Rainfall, Temperature, and Wind**, coupled with early warning indicators for **Extreme Weather Events**.
 
 ---
 
 ## 🌟 Key Features
 
-- 🛰️ **Multi-Source Data Ingestion & Regridding**: Ingests GRIB2/NetCDF files from ECMWF, GFS, and AI models; standardizes onto a unified spatial grid ($0.25^\circ \times 0.25^\circ$).
-- 📊 **Skill Evaluation Engine**: Computes real-time and rolling skill metrics including RMSE, MAE, CRPS (Continuous Ranked Probability Score), Brier Score, and Anomaly Correlation Coefficient (ACC).
-- ⚖️ **Adaptive Weighting Engine**: Utilizes gradient-boosted trees (XGBoost / LightGBM) to dynamically assign spatial-temporal weights based on lead time, terrain, regime, and historical error.
-- 🌪️ **Extreme Event Guidance**: Specialized alert pipeline for heavy precipitation, heatwaves, and high-wind events.
-- 🚀 **REST API & Interactive Dashboard**: Built with FastAPI for high-performance inference and Streamlit for rich spatial-temporal geospatial maps and model reliability analytics.
-- 🐳 **Containerized & Monitored**: Out-of-the-box support for Docker, Docker Compose, Streamlit, and Grafana.
+- **Dynamic Multi-Source Blending:** Combines ECMWF HRES, GFS, and Ensemble Spread using intelligent, learned weighting.
+- **Regime & Lead-Time Adaptive Weighting:** An XGBoost gradient-boosted meta-model generates localized weights conditioned on lead time (T+06h to T+72h), season, and spatial regime.
+- **Extreme Weather Guidance:** Automated detection of heavy precipitation, extreme heatwaves, and gale-force wind gusts adhering to IMD/WMO severity thresholds (Yellow, Orange, Red alerts).
+- **Interactive Geospatial Dashboard:** Built with Streamlit and Plotly, supporting Pan-India national coverage, regional sub-domains (South India, Tamil Nadu), and variable switches (Rainfall, Temperature, Wind).
+- **Lead-Time Trajectory Analytics:** Dynamic map updates across lead times, real-time forecast uncertainty spreads, and model skill trajectories (RMSE vs. Lead Time).
+- **1-Click Automation:** Single execution batch and PowerShell scripts (`run_astra.bat` / `run_astra.ps1`) to run data processing, ML weighting, and dashboard launch in one step.
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ System Architecture
 
-```
-                    ┌────────────────────┐
-                    │   DATA INGESTION   │
-                    │  (NWP, ENS, AI/ML, │
-                    │   Obs, Reanalysis) │
-                    └─────────┬──────────┘
-                              │
-                    ┌─────────▼──────────┐
-                    │  PREPROCESSING &   │
-                    │  COMMON REGRIDDING │
-                    └─────────┬──────────┘
-                              │
-              ┌───────────────┼───────────────┐
-              │               │               │
-      ┌───────▼──────┐ ┌──────▼───────┐ ┌─────▼────────┐
-      │  NWP Sources  │ │  Ensemble    │ │  AI/ML Models │
-      │ (GFS/ECMWF/   │ │  Spread      │ │ (LSTM/Transf/ │
-      │  WRF)         │ │  Products    │ │  GNN)         │
-      └───────┬──────┘ └──────┬───────┘ └─────┬────────┘
-              │               │               │
-              └───────────────┼───────────────┘
-                              │
-                    ┌─────────▼──────────┐
-                    │  SKILL EVALUATION  │
-                    │  (RMSE, CRPS, ACC) │
-                    └─────────┬──────────┘
-                              │
-                    ┌─────────▼──────────┐
-                    │ ADAPTIVE WEIGHTING │
-                    │ (XGBoost/LightGBM) │
-                    └─────────┬──────────┘
-                              │
-                    ┌─────────▼──────────┐
-                    │  FORECAST FUSION   │
-                    │      ENGINE        │
-                    └─────────┬──────────┘
-                              │
-              ┌───────────────┼───────────────┐
-              │               │               │
-      ┌───────▼──────┐ ┌──────▼───────┐ ┌─────▼────────┐
-      │ Blended      │ │ Model Weight │ │ Extreme Event│
-      │ Forecast     │ │ Maps         │ │ Signals      │
-      └───────┬──────┘ └──────┬───────┘ └─────┬────────┘
-              │               │               │
-              └───────────────┼───────────────┘
-                              │
-                    ┌─────────▼──────────┐
-                    │  DASHBOARD + API   │
-                    │ (Streamlit/FastAPI)│
-                    └────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Ingestion ["1. Multi-Source Ingestion"]
+        A1[ECMWF HRES GRIB2] --> B[Regridding & Coordinate Alignment]
+        A2[NOAA GFS Data] --> B
+        A3[Ensemble Forecast Spread] --> B
+    end
+
+    subgraph Evaluation ["2. Skill Evaluation & Training"]
+        B --> C[Skill Evaluator\nRMSE, CRPS, ACC, Brier Score]
+        C --> D[Adaptive Weighting Engine\nXGBoost Meta-Model]
+    end
+
+    subgraph Fusion ["3. Blending & Alerts"]
+        D --> E[Forecast Fusion Engine\nSpatially & Temporally Weighted Blend]
+        E --> F[Extreme Weather Guidance\nThreshold & Cluster Anomaly Detection]
+    end
+
+    subgraph Interface ["4. User Applications"]
+        E --> G[Interactive Streamlit Dashboard\nPan-India Maps & Lead Time Controls]
+        F --> G
+        G --> H[Export Blended NetCDF / JSON Alerts]
+    end
 ```
 
 ---
 
-## 📁 Repository Structure
+## 📂 Repository Structure
 
 ```
-sih2026/
-├── config/                  # Model & regional configuration files
-│   ├── model_config.yaml    # Hyperparameters & model sources definition
-│   ├── regions.yaml         # Region masks and coordinate bounding boxes
-│   └── sources.yaml         # NWP and AI dataset source endpoints
-├── src/                     # Core Python package
-│   ├── api/                 # FastAPI web REST endpoints (`main.py`)
-│   ├── dashboard/           # Streamlit analytics application (`app.py`)
-│   ├── ingestion/           # Data fetchers for ECMWF/GFS & GRIB2 parsers
-│   ├── preprocessing/       # Xarray regridding & normalization utilities
-│   ├── skill_evaluation/    # RMSE, CRPS, Brier score calculation modules
-│   ├── weighting/           # XGBoost dynamic weight predictor
-│   ├── fusion/              # Blending engine & ensemble combination
-│   ├── extremes/            # Extreme weather anomaly detection
-│   ├── models/              # PyTorch weather deep-learning architectures
-│   └── utils/               # Geospatial & temporal helper functions
-├── tests/                   # Unit and integration test suite
-
-├── concept.md               # Detailed technical specification
-├── download_hres.py         # ECMWF open data automated download script
-├── docker-compose.yml       # Multi-container orchestration (API + Dashboard)
-├── Dockerfile               # Production container image setup
-├── requirements.txt         # Python dependencies
-├── pyproject.toml           # Project metadata & build tool configuration
-└── .gitignore               # Git ignore rules for datasets & binaries
+ASTRA/
+├── config/
+│   ├── model_config.yaml         # Blending hyperparameters & weights
+│   ├── regions.yaml              # Geospatial bounding boxes (India, TN, South India)
+│   └── sources.yaml              # Meteorological data endpoints & variables
+├── data/
+│   ├── alerts.json               # Generated extreme weather guidance alerts
+│   ├── learned_weights.csv       # Precomputed regional & lead-time weights
+│   ├── skill_scores.csv          # Verification metrics (RMSE, CRPS, ACC)
+│   └── xgb_adaptive_weighter.json# Trained XGBoost adaptive weighting model
+├── src/
+│   ├── dashboard/
+│   │   └── app.py                # Streamlit GIS dashboard & interactive UI
+│   ├── extremes/
+│   │   └── guidance.py           # Extreme event thresholding and alert engine
+│   ├── ingestion/
+│   │   └── grib_loader.py        # GRIB2 / NetCDF parser and spatial regridder
+│   ├── skill_evaluation/
+│   │   └── metrics.py            # Verification algorithms (RMSE, Spread-Skill, CRPS)
+│   ├── weighting/
+│   │   └── model.py              # XGBoost adaptive weighting trainer & inferencer
+│   └── run_pipeline.py           # End-to-end pipeline execution runner
+├── airflow/
+│   └── dags/
+│       └── astra_pipeline_dag.py # Automated workflow orchestration DAG
+├── Dockerfile                    # Containerization image definition
+├── docker-compose.yml            # Multi-service container specification
+├── requirements.txt              # Production Python dependencies
+├── run_astra.bat                 # 1-Click execution script for Windows
+├── run_astra.ps1                 # 1-Click execution script for PowerShell
+└── README.md                     # Project documentation
 ```
 
 ---
 
-## ⚡ Quick Start
+## 🚀 Quick Start Guide
 
-### 1. Prerequisites
-
-- Python 3.11+
-- Git & Docker (optional for containerized deployment)
-
-### 2. Local Setup
-
+### 1. Clone the Repository
 ```bash
-# Clone the repository
 git clone https://github.com/LakshmiKanthan07/ASTRA---Adaptive-System-for-Temperature-Rainfall-Analytics.git
 cd ASTRA---Adaptive-System-for-Temperature-Rainfall-Analytics
+```
 
-# Create and activate virtual environment
+### 2. Set Up Virtual Environment & Dependencies
+```bash
+# Create virtual environment
 python -m venv venv
-# On Windows:
+
+# Activate virtual environment
+# Windows:
 venv\Scripts\activate
-# On Linux/macOS:
+# Linux/macOS:
 source venv/bin/activate
 
-# Install dependencies
+# Install requirements
 pip install -r requirements.txt
 ```
 
-### 3. Fetch Sample ECMWF Data
+### 3. Run with 1-Click Scripts
+- **On Windows (Command Prompt):**
+  ```cmd
+  run_astra.bat
+  ```
+- **On PowerShell:**
+  ```powershell
+  .\run_astra.ps1
+  ```
 
+*Or execute manually in two steps:*
 ```bash
-python download_hres.py
-```
+# Step 1: Run the end-to-end ML weighting and blending pipeline
+python src/run_pipeline.py
 
-### 4. Run REST API
-
-```bash
-uvicorn src.api.main:app --reload --port 8000
-```
-*API docs available at:* `http://localhost:8000/docs`
-
-### 5. Launch Interactive Dashboard
-
-```bash
+# Step 2: Start the interactive dashboard
 streamlit run src/dashboard/app.py
 ```
+Open your browser at `http://localhost:8501`.
 
 ---
 
-## 🐳 Docker Deployment
+## 🖥️ Dashboard Features & Usage
 
-To launch both the REST API and Streamlit Dashboard in containerized mode:
+1. **Top Metric Bar:** Shows active blended forecast models, peak forecast rainfall intensity, active extreme weather alert levels, and overall RMSE improvement over raw NWP.
+2. **Variable Selector:** Switch seamlessly between **Rainfall (mm/day)**, **Temperature (°C)**, and **Wind Speed (m/s)**.
+3. **Lead Time Controls:** Select lead times from `+06h` to `+72h`. Maps and uncertainty spreads automatically reflect dynamic forecast evolution.
+4. **Geographic Domains:** Choose between **Pan-India (National)**, **South India**, or **Tamil Nadu** with automated bounding-box clipping.
+5. **Model Reliability Weights:** View adaptive weighting distributions across regions and lead times.
+6. **Active Severe Weather Alerts:** Review real-time warnings (Warning, Alert, Watch) categorized by IMD standards.
+7. **Skill Trajectory & Uncertainty:** Track RMSE performance across forecast hours and inspect ensemble uncertainty distributions.
 
+---
+
+## ☁️ Cloud Deployment Options
+
+### Option 1: Streamlit Community Cloud (Recommended & Free)
+1. Fork or push this repository to GitHub.
+2. Visit [share.streamlit.io](https://share.streamlit.io/) and log in with your GitHub account.
+3. Click **"New App"** and select this repository.
+4. Set the main file path to: `src/dashboard/app.py`.
+5. Click **Deploy**.
+
+### Option 2: Render / Hugging Face Spaces
+- **Hugging Face Spaces:** Create a new Space, select **Streamlit** SDK, and link this repository.
+- **Render:** Deploy as a **Web Service** with start command:
+  ```bash
+  streamlit run src/dashboard/app.py --server.port $PORT --server.address 0.0.0.0
+  ```
+
+### Option 3: Docker Deployment
 ```bash
 docker-compose up --build -d
 ```
-
-- **Dashboard**: `http://localhost:8501`
-- **FastAPI Endpoint**: `http://localhost:8000`
+Access the dashboard at `http://localhost:8501`.
 
 ---
 
-## 📜 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please open an issue or submit a pull request for any features, bug fixes, or enhancements.
+## 📄 License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

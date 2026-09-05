@@ -25,5 +25,7 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Office temp files
+# Presentations & Docs
+*.pptx
+ppt/
 ~$*
