@@ -81,6 +81,11 @@ class GribLoader:
         to_drop = [c for c in ds.coords if ds[c].dims == ()]
         return ds.drop_vars(to_drop, errors="ignore")
 
+    def _compute_wind_speed(self, ds: xr.Dataset) -> xr.Dataset:
+        if "u10" in ds and "v10" in ds:
+            ds["wind"] = np.sqrt(ds["u10"]**2 + ds["v10"]**2)
+        return ds
+
     # ------------------------------------------------------------------
     # Public loaders
     # ------------------------------------------------------------------
@@ -92,7 +97,8 @@ class GribLoader:
         if ds is None:
             raise RuntimeError(f"Cannot open HRES file: {filepath}")
         ds = self._rename_vars(ds)
-        keep = [v for v in ("tp", "t2m", "u10", "v10", "msl") if v in ds]
+        ds = self._compute_wind_speed(ds)
+        keep = [v for v in ("tp", "t2m", "u10", "v10", "wind", "msl") if v in ds]
         ds = ds[keep]
         ds = self._drop_scalar_coords(ds)
         ds = self._regrid(ds, method="linear")
@@ -106,7 +112,8 @@ class GribLoader:
         if ds is None:
             raise RuntimeError(f"Cannot open GFS file: {filepath}")
         ds = self._rename_vars(ds)
-        keep = [v for v in ("tp", "t2m", "u10", "v10", "msl") if v in ds]
+        ds = self._compute_wind_speed(ds)
+        keep = [v for v in ("tp", "t2m", "u10", "v10", "wind", "msl") if v in ds]
         ds = ds[keep]
         ds = self._drop_scalar_coords(ds)
         ds = self._regrid(ds, method="linear")
@@ -123,8 +130,9 @@ class GribLoader:
         if ds is None:
             raise RuntimeError(f"Cannot open ENS file: {filepath}")
         ds = self._rename_vars(ds)
+        ds = self._compute_wind_speed(ds)
         spread_vars = {}
-        for var in ("tp", "t2m"):
+        for var in ("tp", "t2m", "wind"):
             if var in ds and "number" in ds[var].dims:
                 spread_vars[f"{var}_spread"] = ds[var].std(dim="number")
                 spread_vars[f"{var}_ensmean"] = ds[var].mean(dim="number")
@@ -140,23 +148,38 @@ class GribLoader:
         Selects only the first time-step to avoid IOProblem on 4 GB files.
         """
         print(f"[Loader] ERA5  ← {filepath}")
-        # Accumulated precipitation lives in stepType=accum
-        ds = self._safe_load_cfgrib(filepath, filter_by_keys={"stepType": "accum"})
-        if ds is None or "tp" not in ds:
-            print("  [Loader] No accumulated tp found; trying stepType=instant…")
-            ds = self._safe_load_cfgrib(filepath, filter_by_keys={"stepType": "instant"})
+        
+        # Load accumulated (tp)
+        ds_accum = self._safe_load_cfgrib(filepath, filter_by_keys={"stepType": "accum"})
+        if ds_accum is not None:
+            if "time" in ds_accum.dims:
+                ds_accum = ds_accum.isel(time=0).drop_vars("time", errors="ignore")
+            ds_accum = ds_accum.load()  # Load into memory to avoid IO locks later
+            ds_accum = self._rename_vars(ds_accum)
 
-        if ds is None:
-            raise RuntimeError(f"Cannot open ERA5 file: {filepath}")
+        # Load instant (t2m, u10, v10)
+        ds_inst = self._safe_load_cfgrib(filepath, filter_by_keys={"stepType": "instant"})
+        if ds_inst is not None:
+            if "time" in ds_inst.dims:
+                ds_inst = ds_inst.isel(time=0).drop_vars("time", errors="ignore")
+            ds_inst = ds_inst.load()  # Load into memory to avoid IO locks later
+            ds_inst = self._rename_vars(ds_inst)
+            ds_inst = self._compute_wind_speed(ds_inst)
 
-        ds = self._rename_vars(ds)
-        keep = [v for v in ("tp", "t2m") if v in ds]
-        ds = ds[keep]
-        ds = self._drop_scalar_coords(ds)
+        # Merge them
+        ds_merged = xr.Dataset()
+        if ds_accum is not None and "tp" in ds_accum:
+            ds_merged["tp"] = ds_accum["tp"]
+            
+        if ds_inst is not None:
+            for v in ("t2m", "u10", "v10", "wind"):
+                if v in ds_inst:
+                    ds_merged[v] = ds_inst[v]
+                    
+        if len(ds_merged.data_vars) == 0:
+             raise RuntimeError(f"Cannot extract truth variables from ERA5 file: {filepath}")
 
-        # Select single time-step to avoid exhausting memory / IO on the 4 GB file
-        if "time" in ds.dims:
-            ds = ds.isel(time=0).drop_vars("time", errors="ignore")
+        ds = self._drop_scalar_coords(ds_merged)
 
         # Rename for disambiguation
         rename_truth = {v: f"{v}_truth" for v in ds.data_vars}

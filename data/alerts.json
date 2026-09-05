@@ -1,0 +1,12 @@
+{
+    "active_alerts": 1,
+    "alerts": [
+        {
+            "type": "HEAVY RAINFALL",
+            "level": "WARNING",
+            "value": 1010.5,
+            "unit": "mm",
+            "message": "Isolated heavy precipitation (1010.5 mm) detected in forecast grid. Flood-related rainfall risk elevated."
+        }
+    ]
+}
