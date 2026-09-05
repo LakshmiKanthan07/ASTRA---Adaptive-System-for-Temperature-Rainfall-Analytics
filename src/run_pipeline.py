@@ -46,7 +46,8 @@ def main():
     except Exception as exc:
         print(f"[Pipeline] ENS spread skipped: {exc}")
 
-    print("\n[Pipeline] ✓ All datasets loaded.")
+    print("\n[Pipeline] [OK] All datasets loaded.")
+
 
     # We will accumulate all blended variables into one dataset
     ds_final = None
@@ -96,13 +97,15 @@ def main():
                 df_v = df[valid]
                 
                 if len(df_v) > 10:
+                    cat_thresh = 2.5 if var == "tp" else None
                     skill_table = compare_models(
                         {"ECMWF HRES":  df_v[f"{var}_hres"].values,
                          "NOAA GFS":    df_v[f"{var}_gfs"].values,
                          "ASTRA Blend": df_v[blended_col].values},
                         df_v[f"{var}_truth"].values,
+                        categorical_threshold=cat_thresh,
                     )
-                    print(f"\n[Pipeline] ✓ Skill Evaluation ({var.upper()}):")
+                    print(f"\n[Pipeline] [OK] Skill Evaluation ({var.upper()}):")
                     print(skill_table.to_string())
                     skill_table.to_csv(f"data/skill_scores_{var}.csv")
                 else:
@@ -119,7 +122,7 @@ def main():
                 print(f"[Pipeline] Skill eval error for {var}: {e}")
                 traceback.print_exc()
 
-    print("\n[Pipeline] ✓ All variables processed.")
+    print("\n[Pipeline] [OK] All variables processed.")
 
     # ── 4. Extreme Weather Guidance ─────────────────────────────
     if ds_final is not None:
@@ -136,7 +139,7 @@ def main():
         
         try:
             os.replace(TEMP_NC, OUTPUT_NC)
-            print(f"\n[Pipeline] ✓ Blended forecast saved → {OUTPUT_NC}")
+            print(f"\n[Pipeline] [OK] Blended forecast saved -> {OUTPUT_NC}")
         except Exception as e:
             print(f"\n[Pipeline] Warning: Could not replace {OUTPUT_NC} because it is locked: {e}")
             print(f"             Forecast is saved at {TEMP_NC} instead.")

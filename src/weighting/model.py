@@ -174,7 +174,7 @@ class AdaptiveWeighter:
         ds_spread: xr.Dataset | None = None,
     ) -> tuple[pd.DataFrame, pd.Series]:
         """Build (X, y) where y = optimal per-point HRES weight."""
-        print(f"[Weighter] Preparing training data for {self.target_var}…")
+        print(f"[Weighter] Preparing training data for {self.target_var}...")
 
         df_hres  = ds_hres.to_dataframe().reset_index()
         df_gfs   = ds_gfs.to_dataframe().reset_index()
@@ -225,13 +225,13 @@ class AdaptiveWeighter:
         self._train_df[f"{self.target_var}_gfs"] = df["orig_gfs"]
         self._train_df[f"{self.target_var}_truth"] = df[truth_var]
 
-        print(f"  → {len(X)} training samples")
-        print(f"  → Target: optimal HRES weight  μ={y.mean():.3f}  σ={y.std():.3f}")
+        print(f"  -> {len(X)} training samples")
+        print(f"  -> Target: optimal HRES weight  mean={y.mean():.3f}  std={y.std():.3f}")
         return X, y
 
     def train(self, X: pd.DataFrame, y: pd.Series) -> None:
-        """Fit with spatially-stratified 80/20 split (every 5th latitude band → val)."""
-        print(f"[Weighter] Training on {len(X)} samples for {self.target_var}…")
+        """Fit with spatially-stratified 80/20 split (every 5th latitude band -> val)."""
+        print(f"[Weighter] Training on {len(X)} samples for {self.target_var}...")
 
         n = len(X)
         idx = np.arange(n)
@@ -249,7 +249,7 @@ class AdaptiveWeighter:
 
         print("[Weighter] Training complete.")
         w_pred = self.model.predict(X)
-        print(f"  Learned mean HRES weight: {w_pred.mean():.3f} ± {w_pred.std():.3f}")
+        print(f"  Learned mean HRES weight: {w_pred.mean():.3f} +/- {w_pred.std():.3f}")
         print(f"  Learned mean GFS  weight: {(1-w_pred).mean():.3f}")
 
     def predict(
@@ -262,7 +262,7 @@ class AdaptiveWeighter:
         if not self.trained:
             self.load()
 
-        print(f"[Weighter] Generating blended forecast for {self.target_var}…")
+        print(f"[Weighter] Generating blended forecast for {self.target_var}...")
         df_hres  = ds_hres.to_dataframe().reset_index()
         df_gfs   = ds_gfs.to_dataframe().reset_index()
         df_spread = ds_spread.to_dataframe().reset_index() if ds_spread is not None else None
@@ -309,7 +309,7 @@ class AdaptiveWeighter:
         if ds_spread is not None and spread_var in ds_spread:
             ds_out[spread_var] = ds_spread[spread_var]
 
-        print(f"  → output shape: {ds_out[blended_col].shape}")
+        print(f"  -> output shape: {ds_out[blended_col].shape}")
         return ds_out
 
     def save(self, path: str = None) -> None:

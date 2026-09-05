@@ -25,7 +25,6 @@ class ExtremeWeatherDetector:
         """
         alerts = []
         
-        # Check Rainfall
         if "tp_blended" in ds:
             # converting from m to mm (if model predicts in meters, wait, log says values are 0-1.4 meters for GFS?
             # Actually ERA5 tp is in meters, so mm = val * 1000

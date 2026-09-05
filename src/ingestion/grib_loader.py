@@ -16,7 +16,7 @@ class GribLoader:
     """
 
     VARS_RENAME = {
-        # ECMWF standard short names → internal standard names
+        # ECMWF standard short names -> internal standard names
         "t2m": "t2m",
         "tp":  "tp",
         "msl": "msl",
@@ -46,16 +46,25 @@ class GribLoader:
     # ------------------------------------------------------------------
 
     def _safe_load_cfgrib(self, filepath: str, filter_by_keys: dict | None = None) -> xr.Dataset | None:
-        """Try to open a GRIB file with cfgrib, returning None on failure."""
+        """Open a GRIB file using cfgrib.open_datasets to seamlessly merge all levels (2m, 10m, surface)."""
+        import cfgrib
         try:
-            return xr.open_dataset(
-                filepath, engine="cfgrib",
-                filter_by_keys=filter_by_keys or {},
-                backend_kwargs={"errors": "ignore"},
-            )
+            if filter_by_keys:
+                return xr.open_dataset(
+                    filepath, engine="cfgrib",
+                    filter_by_keys=filter_by_keys,
+                    backend_kwargs={"errors": "ignore"},
+                )
+            
+            datasets = cfgrib.open_datasets(filepath, backend_kwargs={"errors": "ignore"})
+            if not datasets:
+                return None
+            
+            cleaned_ds = [self._drop_scalar_coords(ds) for ds in datasets]
+            merged = xr.merge(cleaned_ds, compat="override")
+            return merged
         except Exception as exc:
-            print(f"  [GribLoader] Warning: could not open {filepath} "
-                  f"with keys={filter_by_keys}: {exc}")
+            print(f"  [GribLoader] Warning: could not open {filepath}: {exc}")
             return None
 
     def _regrid(self, ds: xr.Dataset, method: str = "linear") -> xr.Dataset:
@@ -91,8 +100,8 @@ class GribLoader:
     # ------------------------------------------------------------------
 
     def load_hres(self, filepath: str) -> xr.Dataset:
-        """Load ECMWF HRES deterministic forecast → common grid."""
-        print(f"[Loader] HRES  ← {filepath}")
+        """Load ECMWF HRES deterministic forecast -> common grid."""
+        print(f"[Loader] HRES  <- {filepath}")
         ds = self._safe_load_cfgrib(filepath)
         if ds is None:
             raise RuntimeError(f"Cannot open HRES file: {filepath}")
@@ -102,12 +111,12 @@ class GribLoader:
         ds = ds[keep]
         ds = self._drop_scalar_coords(ds)
         ds = self._regrid(ds, method="linear")
-        print(f"  → variables: {list(ds.data_vars)}  shape: {ds['tp'].shape if 'tp' in ds else '?'}")
+        print(f"  -> variables: {list(ds.data_vars)}  shape: {ds['tp'].shape if 'tp' in ds else '?'}")
         return ds
 
     def load_gfs(self, filepath: str) -> xr.Dataset:
-        """Load NOAA GFS → common grid."""
-        print(f"[Loader] GFS   ← {filepath}")
+        """Load NOAA GFS -> common grid."""
+        print(f"[Loader] GFS   <- {filepath}")
         ds = self._safe_load_cfgrib(filepath)
         if ds is None:
             raise RuntimeError(f"Cannot open GFS file: {filepath}")
@@ -117,7 +126,7 @@ class GribLoader:
         ds = ds[keep]
         ds = self._drop_scalar_coords(ds)
         ds = self._regrid(ds, method="linear")
-        print(f"  → variables: {list(ds.data_vars)}  shape: {ds['tp'].shape if 'tp' in ds else '?'}")
+        print(f"  -> variables: {list(ds.data_vars)}  shape: {ds['tp'].shape if 'tp' in ds else '?'}")
         return ds
 
     def load_ens_spread(self, filepath: str) -> xr.Dataset:
@@ -125,7 +134,7 @@ class GribLoader:
         Load ECMWF ENS perturbed members, compute ensemble spread
         (inter-member std-dev) as a model uncertainty proxy.
         """
-        print(f"[Loader] ENS   ← {filepath}")
+        print(f"[Loader] ENS   <- {filepath}")
         ds = self._safe_load_cfgrib(filepath)
         if ds is None:
             raise RuntimeError(f"Cannot open ENS file: {filepath}")
@@ -139,7 +148,7 @@ class GribLoader:
         ds_spread = xr.Dataset(spread_vars)
         ds_spread = self._drop_scalar_coords(ds_spread)
         ds_spread = self._regrid(ds_spread, method="linear")
-        print(f"  → spread variables: {list(ds_spread.data_vars)}")
+        print(f"  -> spread variables: {list(ds_spread.data_vars)}")
         return ds_spread
 
     def load_ground_truth(self, filepath: str) -> xr.Dataset:
@@ -147,7 +156,7 @@ class GribLoader:
         Load ERA5 historical reanalysis as ground-truth labels.
         Selects only the first time-step to avoid IOProblem on 4 GB files.
         """
-        print(f"[Loader] ERA5  ← {filepath}")
+        print(f"[Loader] ERA5  <- {filepath}")
         
         # Load accumulated (tp)
         ds_accum = self._safe_load_cfgrib(filepath, filter_by_keys={"stepType": "accum"})
@@ -186,5 +195,5 @@ class GribLoader:
         ds = ds.rename_vars(rename_truth)
 
         ds = self._regrid(ds, method="nearest")
-        print(f"  → truth variables: {list(ds.data_vars)}")
+        print(f"  -> truth variables: {list(ds.data_vars)}")
         return ds
