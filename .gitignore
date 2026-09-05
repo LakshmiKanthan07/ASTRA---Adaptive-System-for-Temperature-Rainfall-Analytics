@@ -4,16 +4,14 @@ __pycache__/
 *$py.class
 *.pyc
 
-# Weather Raw Data & Forecast Grids (High Volume / Heavy Binaries)
+# Weather Raw Data (High Volume GRIB Binaries)
 *.grib
 *.grib2
 *.grib*
 *.pgrb*
 *.idx
-*.nc
 *.nc.tmp
 *.tmp
-data/
 
 .venv/
 env/
@@ -27,3 +25,4 @@ Thumbs.db
 *.pptx
 ppt/
 ~$*
+ppt_text.txt
