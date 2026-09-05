@@ -1,0 +1,61 @@
+{
+  "generated_at": "2026-09-05T10:58:10.528840Z",
+  "observation_source": "synthetic",
+  "is_real_data": false,
+  "verification": {
+    "tp": {
+      "RMSE": 0.00175,
+      "MAE": 0.00135,
+      "Bias": -0.00016,
+      "Correlation": 0.99991,
+      "Skill Score": 0.98625,
+      "n_points": 12769,
+      "POD": 0.953,
+      "FAR": 0.004,
+      "CSI": 0.95,
+      "FBIAS": 0.956,
+      "F1": 0.974,
+      "threshold_mm": 2.5,
+      "n_events_obs": 9496,
+      "hits": 9048,
+      "misses": 448,
+      "false_alarms": 33,
+      "narrative": "Blended RMSE=0.0018. Adaptive weights will be further refined next cycle."
+    },
+    "t2m": {
+      "RMSE": 0.02553,
+      "MAE": 0.02013,
+      "Bias": -0.0023,
+      "Correlation": 1.0,
+      "Skill Score": 0.99712,
+      "n_points": 12769,
+      "narrative": "Blended RMSE=0.0255. Adaptive weights will be further refined next cycle."
+    },
+    "wind": {
+      "RMSE": 0.02306,
+      "MAE": 0.01814,
+      "Bias": 0.00042,
+      "Correlation": 0.99996,
+      "Skill Score": 0.99066,
+      "n_points": 12769,
+      "narrative": "Blended RMSE=0.0231. Adaptive weights will be further refined next cycle."
+    }
+  },
+  "weight_updates": {
+    "tp": {
+      "ECMWF HRES": 72.2,
+      "NOAA GFS": 27.8,
+      "HRES RMSE": 0.1564,
+      "GFS RMSE": 1.9958
+    }
+  },
+  "feedback_cycle": {
+    "step_1": "Observations retrieved (synthetic proxy for MVP demo)",
+    "step_2": "Forecast vs observations compared at grid-point level",
+    "step_3": "RMSE/MAE/Bias/POD/FAR/CSI computed per variable",
+    "step_4": "Skill history appended to rolling 30-cycle window",
+    "step_5": "Adaptive weights nudged via exponential smoothing (\u03b1=0.2)",
+    "step_6": "Updated weights persisted to data/learned_weights_*.csv",
+    "step_7": "This report saved for dashboard consumption"
+  }
+}

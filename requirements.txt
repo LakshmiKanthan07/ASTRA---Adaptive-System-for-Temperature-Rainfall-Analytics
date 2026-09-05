@@ -1,18 +1,36 @@
-torch
-xgboost
-lightgbm
-xarray
-netCDF4
-cfgrib
-pydantic
+# Core scientific stack
 numpy
 scipy
 pandas
+xarray
+
+# Meteorological data I/O
+netCDF4
+cfgrib
+eccodes
+
+# Machine learning
+xgboost
+lightgbm
+scikit-learn
+
+# Dashboard
+streamlit
+plotly
+
+# REST API
 fastapi
 uvicorn
-streamlit
-mlflow
+pydantic
 
+# Visualization
+matplotlib
+
+# Data download
 ecmwf-opendata
-herbie-data
-cdsapi
+
+# Optional (heavy — comment out if not needed locally)
+# torch
+# mlflow
+# herbie-data
+# cdsapi

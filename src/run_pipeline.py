@@ -145,6 +145,15 @@ def main():
     print("  Pipeline v2.1 completed successfully!")
     print("=" * 60)
 
+    # ── 6. Automated Feedback Loop ────────────────────────────────
+    print("\n[Pipeline] Running automated feedback loop...")
+    try:
+        from src.feedback.updater import FeedbackUpdater
+        updater = FeedbackUpdater(observation_source="synthetic")
+        updater.run()
+    except Exception as e:
+        print(f"[Pipeline] Warning: Feedback loop error (non-critical): {e}")
+
 
 if __name__ == "__main__":
     main()
