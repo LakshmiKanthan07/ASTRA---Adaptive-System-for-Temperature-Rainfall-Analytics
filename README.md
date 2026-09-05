@@ -132,27 +132,49 @@ pip install -r requirements.txt
   .\run_astra.ps1
   ```
 
-*Or execute manually in two steps:*
+*Or execute manually in three steps:*
 ```bash
 # Step 1: Run the end-to-end ML weighting and blending pipeline
 python src/run_pipeline.py
 
-# Step 2: Start the interactive dashboard
+# Step 2: Start the REST API (Background)
+uvicorn src.api.main:app --reload --port 8000
+
+# Step 3: Start the interactive dashboard
 streamlit run src/dashboard/app.py
 ```
 Open your browser at `http://localhost:8501`.
+API Docs are available at `http://localhost:8000/docs`.
 
 ---
 
 ## 🖥️ Dashboard Features & Usage
 
-1. **Top Metric Bar:** Shows active blended forecast models, peak forecast rainfall intensity, active extreme weather alert levels, and overall RMSE improvement over raw NWP.
+1. **Top KPI Strip & Confidence Score:** Shows active blended forecast mean values, active extreme weather alert levels, and a calibrated **0–100% Forecast Confidence Score** based on model agreement, ensemble spread, and lead time.
 2. **Variable Selector:** Switch seamlessly between **Rainfall (mm/day)**, **Temperature (°C)**, and **Wind Speed (m/s)**.
 3. **Lead Time Controls:** Select lead times from `+06h` to `+72h`. Maps and uncertainty spreads automatically reflect dynamic forecast evolution.
 4. **Geographic Domains:** Choose between **Pan-India (National)**, **South India**, or **Tamil Nadu** with automated bounding-box clipping.
-5. **Model Reliability Weights:** View adaptive weighting distributions across regions and lead times.
-6. **Active Severe Weather Alerts:** Review real-time warnings (Warning, Alert, Watch) categorized by IMD standards.
-7. **Skill Trajectory & Uncertainty:** Track RMSE performance across forecast hours and inspect ensemble uncertainty distributions.
+5. **Adaptive Weights & Explainability:** View the dynamically generated model weights with dynamic narrative text explaining *why* a model was chosen based on the prevailing weather regime and historical skill.
+6. **Active Severe Weather Alerts & Guidance:** Review real-time warnings (Warning, Alert, Watch) categorized by IMD standards (e.g. > 64.5 mm rainfall) including probability & model agreement.
+7. **Skill Trajectory & Uncertainty:** Track RMSE performance across forecast hours and inspect ensemble uncertainty distributions with an interactive comparison chart showing blended RMSE improvement versus raw models.
+8. **Automated Feedback Loop & Continuous Learning:** Trigger a learning cycle to automatically simulate ingestion of "yesterday's observations", compute error metrics (RMSE/POD/FAR/CSI), incrementally update XGBoost weights via exponential smoothing, and track skill history over time.
+9. **Export & Download:** Export blended grid data to CSV, and download alert guidance / feedback reports as JSON.
+
+---
+
+## 🌐 FastAPI REST Backend
+
+ASTRA includes a lightweight REST API exposing the core forecast data to downstream applications and mobile apps.
+
+Endpoints:
+- `GET /forecast` — Blended forecast at a lat/lon point.
+- `GET /weights` — Current adaptive model weights.
+- `GET /alerts` — Active extreme-weather alerts.
+- `GET /skill` — Model skill comparison table.
+- `GET /confidence` — Per-variable confidence score.
+- `POST /feedback/trigger` — Trigger one feedback learning cycle.
+
+Explore the auto-generated Swagger UI docs by visiting: `http://localhost:8000/docs`.
 
 ---
 
