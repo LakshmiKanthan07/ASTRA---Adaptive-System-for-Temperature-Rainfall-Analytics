@@ -411,7 +411,7 @@ with map_col:
         colorbar=dict(
             title=cb_title, thickness=15,
             tickfont=dict(color=PLOTLY_TEXT, family="JetBrains Mono"),
-            titlefont=dict(color=PLOTLY_TEXT, family="Inter"),
+            title_font=dict(color=PLOTLY_TEXT, family="Inter"),
         )
     ))
     fig_map.update_layout(
@@ -478,9 +478,9 @@ with table_col:
             template="plotly_dark", plot_bgcolor=PLOTLY_BG, paper_bgcolor=PLOTLY_BG,
             margin=dict(l=40, r=10, t=10, b=30), height=130,
             xaxis=dict(title=f"Spread ({cb_title})", color=PLOTLY_TEXT, gridcolor=PLOTLY_GRID,
-                       tickfont=dict(family="JetBrains Mono", size=10), titlefont=dict(size=10)),
+                       tickfont=dict(family="JetBrains Mono", size=10), title_font=dict(size=10)),
             yaxis=dict(title="Count", color=PLOTLY_TEXT, gridcolor=PLOTLY_GRID,
-                       tickfont=dict(family="JetBrains Mono", size=10), titlefont=dict(size=10)),
+                       tickfont=dict(family="JetBrains Mono", size=10), title_font=dict(size=10)),
             bargap=0.1,
         )
         st.plotly_chart(fig_hist, use_container_width=True, config={"displayModeBar": False})
