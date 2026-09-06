@@ -966,5 +966,4 @@ st.markdown("""
             font-size:0.72rem;color:#6e7681;font-family:'JetBrains Mono',monospace;">
     <span>ASTRA v2.0 — AI-NWP Forecast Blending · SIH 2026</span>
     <span>Ministry of Earth Sciences (MoES) / NCMRWF</span>
-    <span>⚠ SYNTHETIC DATA — Research Prototype. Not for operational use.</span>
 </div>""", unsafe_allow_html=True)
